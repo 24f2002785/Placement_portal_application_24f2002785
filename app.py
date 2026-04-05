@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from extensions import db, login_manager
 
@@ -8,16 +9,20 @@ def create_app():
     app.config['SECRET_KEY'] = 'placement-secret-2024'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///placement.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+    app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'resumes')  
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
     db.init_app(app)
     login_manager.init_app(app)
+    
+    from routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
 
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
-    with app.app_context():
-        from models import db as _db
-        _db.create_all()
     app.run(debug=True)
