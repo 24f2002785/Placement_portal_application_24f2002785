@@ -12,16 +12,15 @@
         </h3>
         <p class="text-muted small mb-4">Create your account to start applying for placement drives.</p>
 
-        <!-- enctype="multipart/form-data" is REQUIRED when uploading files -->
-        <!-- Without this, the resume file will NOT be received by Flask -->
+        
         <form method="POST" enctype="multipart/form-data">
 
-          <!-- Section heading -->
+     
           <h6 class="text-uppercase text-muted fw-semibold border-bottom pb-1 mb-3">
             Account Details
           </h6>
 
-          <!-- row + g-3 = grid with gap between columns -->
+       
           <div class="row g-3 mb-3">
 
             <div class="col-md-6">
@@ -38,7 +37,7 @@
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Password *</label>
-              <!-- id="pwd" is used by JavaScript below to compare passwords -->
+          
               <input type="password" name="password" id="pwd"
                      class="form-control" required minlength="6"/>
             </div>
@@ -71,7 +70,7 @@
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Branch</label>
-              <!-- Dropdown select -->
+    
               <select name="branch" class="form-select">
                 <option value="">Select Branch</option>
                 <option>Computer Science</option>
@@ -111,7 +110,6 @@
 
           </div>
 
-          <!-- onclick runs JavaScript before form submits -->
           <button type="submit" class="btn btn-primary px-4 py-2"
                   onclick="return checkPasswords()">
             <i class="bi bi-person-check me-1"></i>Create Account
@@ -128,23 +126,23 @@
 
 {% endblock %}
 
-<!-- JavaScript block — runs in browser (not on server) -->
+
 {% block scripts %}
 <script>
   function checkPasswords() {
     const pwd  = document.getElementById('pwd').value;
     const cpwd = document.getElementById('cpwd').value;
 
-    // Check if passwords match
+
     if (pwd !== cpwd) {
       alert('Passwords do not match!');
-      return false;  // false = stop form submission
+      return false;
     }
     if (pwd.length < 6) {
       alert('Password must be at least 6 characters.');
       return false;
     }
-    return true;  // true = allow form to submit
+    return true;  
   }
 </script>
 {% endblock %}

@@ -1,27 +1,21 @@
-<!-- This page extends base.html -->
-<!-- It will have the navbar, flash messages, footer automatically -->
+
 {% extends 'base.html' %}
 
-<!-- Set the browser tab title -->
 {% block title %}Home – Placement Portal{% endblock %}
 
-<!-- Fill the content block -->
 {% block content %}
 
 <div class="text-center py-5">
 
-  <!-- Main heading -->
+
   <h1 class="display-4 fw-bold text-primary mb-3">
     <i class="bi bi-briefcase-fill me-2"></i>Placement Portal
   </h1>
 
-  <!-- Subtitle -->
   <p class="lead text-muted mb-4">
     Connecting students with their dream careers.
   </p>
 
-  <!-- Three buttons side by side -->
-  <!-- d-flex = flexbox, justify-content-center = center them, gap-3 = space between -->
   <div class="d-flex justify-content-center gap-3 flex-wrap">
 
     <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
@@ -38,7 +32,6 @@
 
   </div>
 
-  <!-- Info cards below -->
   <div class="row g-4 mt-5 text-start">
 
     <div class="col-md-4">
