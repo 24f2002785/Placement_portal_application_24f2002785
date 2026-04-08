@@ -56,6 +56,7 @@ class Company(db.Model):
     location = db.Column(db.String(150))
     approval_status = db.Column(db.String(20), default='pending')
     is_blacklisted  = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     jobs = db.relationship('JobPosition', backref='company', lazy='dynamic')
 
@@ -82,10 +83,10 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     job_id = db.Column(db.Integer, db.ForeignKey('job_position.id'), nullable=False)
-    applied_at = db.Column(db.DateTime, default=datetime.utcnow)
+    applied_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     status = db.Column(db.String(30), default='applied')
     notes = db.Column(db.Text)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         db.UniqueConstraint('student_id', 'job_id', name='uq_student_job'),
@@ -97,4 +98,4 @@ class Notification(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
     message = db.Column(db.String(300))
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))

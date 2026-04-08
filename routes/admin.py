@@ -82,8 +82,8 @@ def approve_company(company_id):
 
 @admin_bp.route('/company/<int:company_id>/reject', methods=['POST'])
 @login_required
-@admin_bp
-def reject_comapny(company_id):
+@admin_required
+def reject_company(company_id):
     company = Company.query.get_or_404(company_id)
     company.approval_status = 'rejected'
     db.session.commit()
