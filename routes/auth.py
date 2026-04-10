@@ -56,7 +56,7 @@ def login():
     return render_template('auth/login.html')
 
 
-@auth_bp.route('/register/stuent', methods=['GET', 'POST'])
+@auth_bp.route('/register/student', methods=['GET', 'POST'])
 def register_student():
     if current_user.is_authenticated:
         return redirect(url_for(f'{current_user.role}.dashboard'))
