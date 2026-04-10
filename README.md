@@ -144,3 +144,4 @@ Files are saved as `{roll_no}_{original_filename}` inside `static/uploads/resume
 ## API Spec
 
 An OpenAPI 3.0 spec (`api.yaml`) is available in the repo documenting all routes, request bodies, and responses.
+
