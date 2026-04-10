@@ -1,0 +1,870 @@
+openapi: 3.0.3
+info:
+  title: Placement Portal API
+  description: >
+    REST-style API specification for the Placement Portal application.
+    The app uses session-based authentication (Flask-Login) with form submissions.
+    Three roles exist: student, company, and admin.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Login, registration, and logout
+  - name: Student
+    description: Student dashboard, profile, and job applications
+  - name: Company
+    description: Company dashboard, job postings, and application management
+  - name: Admin
+    description: Admin panel for managing companies, students, jobs, and applications
+
+paths:
+
+  # ─── AUTH ───────────────────────────────────────────────────────────────────
+
+  /:
+    get:
+      tags: [Auth]
+      summary: Home / Landing page
+      description: Redirects authenticated users to their role-specific dashboard.
+      responses:
+        "200":
+          description: Landing page rendered
+        "302":
+          description: Redirect to dashboard if already logged in
+
+  /login:
+    get:
+      tags: [Auth]
+      summary: Show login form
+      responses:
+        "200":
+          description: Login page rendered
+    post:
+      tags: [Auth]
+      summary: Authenticate user
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: student@example.com
+                password:
+                  type: string
+                  format: password
+                  example: secret123
+      responses:
+        "302":
+          description: Redirect to role-specific dashboard on success, or back to login on failure
+        "200":
+          description: Login page re-rendered with flash error message
+
+  /register/student:
+    get:
+      tags: [Auth]
+      summary: Show student registration form
+      responses:
+        "200":
+          description: Student registration form rendered
+    post:
+      tags: [Auth]
+      summary: Register a new student
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [username, email, password, confirm_password, name, roll_no, branch]
+              properties:
+                username:
+                  type: string
+                  example: john_doe
+                email:
+                  type: string
+                  format: email
+                  example: john@college.edu
+                password:
+                  type: string
+                  format: password
+                confirm_password:
+                  type: string
+                  format: password
+                name:
+                  type: string
+                  example: John Doe
+                roll_no:
+                  type: string
+                  example: "21CS001"
+                branch:
+                  type: string
+                  example: Computer Science
+                cgpa:
+                  type: number
+                  format: float
+                  example: 8.5
+                phone:
+                  type: string
+                  example: "9876543210"
+                skills:
+                  type: string
+                  example: "Python, Flask, SQL"
+                resume:
+                  type: string
+                  format: binary
+                  description: Resume file (pdf, doc, or docx)
+      responses:
+        "302":
+          description: Redirect to login on successful registration
+        "200":
+          description: Form re-rendered with flash error on failure
+
+  /register/company:
+    get:
+      tags: [Auth]
+      summary: Show company registration form
+      responses:
+        "200":
+          description: Company registration form rendered
+    post:
+      tags: [Auth]
+      summary: Register a new company (pending admin approval)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username, email, password, confirm_password, name]
+              properties:
+                username:
+                  type: string
+                  example: acme_corp
+                email:
+                  type: string
+                  format: email
+                  example: hr@acme.com
+                password:
+                  type: string
+                  format: password
+                confirm_password:
+                  type: string
+                  format: password
+                name:
+                  type: string
+                  example: Acme Corporation
+                industry:
+                  type: string
+                  example: Information Technology
+                website:
+                  type: string
+                  example: https://acme.com
+                description:
+                  type: string
+                  example: Leading software firm
+                location:
+                  type: string
+                  example: Bengaluru, India
+      responses:
+        "302":
+          description: Redirect to login with pending approval message
+        "200":
+          description: Form re-rendered with flash error on failure
+
+  /logout:
+    get:
+      tags: [Auth]
+      summary: Log out the current user
+      security:
+        - sessionAuth: []
+      responses:
+        "302":
+          description: Redirect to login page
+
+  # ─── STUDENT ────────────────────────────────────────────────────────────────
+
+  /dashboard:
+    get:
+      tags: [Student]
+      summary: Student dashboard
+      description: Shows recent applications, unread notifications, and summary stats.
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Dashboard page with stats and recent applications
+        "302":
+          description: Redirect to login if not authenticated
+
+  /profile:
+    get:
+      tags: [Student]
+      summary: View student profile
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Student profile page
+    post:
+      tags: [Student]
+      summary: Update student profile
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                branch:
+                  type: string
+                phone:
+                  type: string
+                skills:
+                  type: string
+                linkedin:
+                  type: string
+                about:
+                  type: string
+                cgpa:
+                  type: number
+                  format: float
+                resume:
+                  type: string
+                  format: binary
+                  description: New resume file (pdf, doc, or docx)
+      responses:
+        "302":
+          description: Redirect to profile page on success
+        "200":
+          description: Profile page re-rendered on error
+
+  /jobs:
+    get:
+      tags: [Student]
+      summary: Browse available job listings
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by job title or description
+        - name: skill
+          in: query
+          schema:
+            type: string
+          description: Filter by required skill
+        - name: company
+          in: query
+          schema:
+            type: string
+          description: Filter by company name
+      responses:
+        "200":
+          description: List of active, approved job positions
+
+  /job/{job_id}:
+    get:
+      tags: [Student]
+      summary: View job details
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job detail page
+        "404":
+          description: Job not found
+
+  /job/{job_id}/apply:
+    post:
+      tags: [Student]
+      summary: Apply for a job
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to my applications on success or failure with flash message
+        "404":
+          description: Job not found
+
+  /my-applications:
+    get:
+      tags: [Student]
+      summary: View all applications submitted by the student
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: List of student's applications with statuses
+
+  # ─── COMPANY ────────────────────────────────────────────────────────────────
+
+  /dashboard:
+    get:
+      tags: [Company]
+      summary: Company dashboard
+      description: Shows all posted jobs, total applications, active job count, and placed students.
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Company dashboard
+
+  /post-job:
+    get:
+      tags: [Company]
+      summary: Show job posting form
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: Job post form
+    post:
+      tags: [Company]
+      summary: Post a new job (pending admin approval)
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  example: Software Engineer
+                description:
+                  type: string
+                  example: Full-stack development role
+                required_skills:
+                  type: string
+                  example: "Python, React, PostgreSQL"
+                experience:
+                  type: string
+                  example: "0-2 years"
+                salary_min:
+                  type: number
+                  format: float
+                  example: 600000
+                salary_max:
+                  type: number
+                  format: float
+                  example: 900000
+                location:
+                  type: string
+                  example: Bengaluru
+                deadline:
+                  type: string
+                  format: date
+                  example: "2025-12-31"
+      responses:
+        "302":
+          description: Redirect to company dashboard on success
+        "200":
+          description: Form re-rendered with error
+
+  /edit-job/{job_id}:
+    get:
+      tags: [Company]
+      summary: Show job edit form
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job edit form
+        "404":
+          description: Job not found or doesn't belong to this company
+    post:
+      tags: [Company]
+      summary: Update an existing job
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                required_skills:
+                  type: string
+                experience:
+                  type: string
+                location:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, closed]
+                salary_min:
+                  type: number
+                  format: float
+                salary_max:
+                  type: number
+                  format: float
+                deadline:
+                  type: string
+                  format: date
+      responses:
+        "302":
+          description: Redirect to company dashboard on success
+        "200":
+          description: Form re-rendered with error
+
+  /job/{job_id}/applications:
+    get:
+      tags: [Company]
+      summary: View all applications for a specific job
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of applications for the job
+
+  /application/{app_id}/update:
+    post:
+      tags: [Company]
+      summary: Update the status of a student's application
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: app_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [applied, shortlisted, interview, rejected, placed]
+                  example: shortlisted
+                notes:
+                  type: string
+                  example: Strong candidate, schedule interview
+      responses:
+        "302":
+          description: Redirect to job applications page
+        "404":
+          description: Application not found
+
+  /student/{student_id}:
+    get:
+      tags: [Company]
+      summary: View a student's profile (accessible to company)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student profile page
+        "404":
+          description: Student not found
+
+  # ─── ADMIN ──────────────────────────────────────────────────────────────────
+
+  /dashboard:
+    get:
+      tags: [Admin]
+      summary: Admin dashboard with platform-wide stats
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: >
+            Stats: total companies, pending companies, approved companies,
+            total students, total jobs, pending jobs, total applications,
+            placed students. Also includes recent companies and jobs.
+
+  /companies:
+    get:
+      tags: [Admin]
+      summary: List all companies
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by company name or industry
+      responses:
+        "200":
+          description: List of all companies
+
+  /company/{company_id}:
+    get:
+      tags: [Admin]
+      summary: View company detail with all their job listings
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: company_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Company detail page
+        "404":
+          description: Company not found
+
+  /company/{company_id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve a company registration
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: company_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to companies list
+
+  /company/{company_id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject a company registration
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: company_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to companies list
+
+  /company/{company_id}/blacklist:
+    post:
+      tags: [Admin]
+      summary: Toggle blacklist status of a company (also deactivates their user account)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: company_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to companies list
+
+  /students:
+    get:
+      tags: [Admin]
+      summary: List all students
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name, roll number, or phone
+      responses:
+        "200":
+          description: List of all students
+
+  /student/{student_id}:
+    get:
+      tags: [Admin]
+      summary: View student detail with application history
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student detail page
+        "404":
+          description: Student not found
+
+  /student/{student_id}/blacklist:
+    post:
+      tags: [Admin]
+      summary: Toggle activation status of a student account
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to students list
+
+  /jobs:
+    get:
+      tags: [Admin]
+      summary: List all job postings (approved and pending)
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: List of all jobs
+
+  /job/{job_id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve a job posting
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to jobs list
+
+  /job/{job_id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject a job posting (sets is_approved=False and status=closed)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "302":
+          description: Redirect to jobs list
+
+  /applications:
+    get:
+      tags: [Admin]
+      summary: View all applications across the platform
+      security:
+        - sessionAuth: []
+      responses:
+        "200":
+          description: List of all applications, ordered by most recent
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Flask session cookie (set automatically on login)
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [student, company, admin]
+        active:
+          type: boolean
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        name:
+          type: string
+        roll_no:
+          type: string
+        branch:
+          type: string
+        cgpa:
+          type: number
+          format: float
+        skills:
+          type: string
+        phone:
+          type: string
+        linkedin:
+          type: string
+        about:
+          type: string
+        resume_path:
+          type: string
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        name:
+          type: string
+        industry:
+          type: string
+        website:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        approval_status:
+          type: string
+          enum: [pending, approved, rejected]
+        is_blacklisted:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    JobPosition:
+      type: object
+      properties:
+        id:
+          type: integer
+        company_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        required_skills:
+          type: string
+        experience:
+          type: string
+        salary_min:
+          type: number
+          format: float
+        salary_max:
+          type: number
+          format: float
+        location:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, closed]
+        is_approved:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Application:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        job_id:
+          type: integer
+        applied_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [applied, shortlisted, interview, rejected, placed]
+        notes:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        student_id:
+          type: integer
+        message:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
