@@ -130,7 +130,7 @@ def students():
 def student_detail(student_id):
     student = Student.query.get_or_404(student_id)
     applications = student.applications.order_by(Application.applied_at.desc()).all()
-    return render_template('admin/studet_detail.html',
+    return render_template('admin/student_detail.html',
                            student=student,
                            applicatios=applications)
 
