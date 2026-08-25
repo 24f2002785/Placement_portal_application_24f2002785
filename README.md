@@ -1,5 +1,7 @@
 # Placement Portal
 
+Built as part of my Modern Application Development coursework at IIT Madras. The idea was to simulate a real college placement cell — three different user roles, each with their own workflow, all talking to the same backend.
+
 A web-based college placement management system built with Flask. It connects students, companies, and admins on a single platform — students can browse and apply for jobs, companies can post openings and manage applications, and admins oversee everything.
 
 ---
